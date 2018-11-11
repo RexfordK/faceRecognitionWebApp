@@ -1,0 +1,10 @@
+.Tilt {
+    background: rgb(70, 130, 180, 0.7);
+}
+
+.Tilt-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
