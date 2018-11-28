@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import logo from "./logo.svg";
 import "./App.css";
 import Navigation from "./components/navigation/navigation";
 import Logo from "./components/logo/Logo";
@@ -7,6 +6,9 @@ import ImageLink from "./components/ImageLinkForm/imageLinkForm";
 import Rank from "./components/Rank/Rank";
 import Particles from "react-particles-js";
 import FaceRecognitionComp from "./components/faceRecognitionComp/faceRecognition";
+import SignIn from "./components/SignIn/SignIn";
+import Register from "./components/register/Register";
+
 import Clarifai from "clarifai";
 
 const app = new Clarifai.App({
@@ -31,12 +33,15 @@ class App extends Component {
     this.state = {
       input: "",
       imageURL: "",
-      box: {}
+      box: {},
+      route: "signIn",
+      isSignedIn: false
     };
   }
 
-  calculateFaceLocation = (data) => {
-    const clarifaiFace =  data.outputs[0].data.regions[0].region_info.bounding_box;
+  calculateFaceLocation = data => {
+    const clarifaiFace =
+      data.outputs[0].data.regions[0].region_info.bounding_box;
     // dom manipulation
     const image = document.getElementById("inputImage");
     const width = Number(image.width);
@@ -45,15 +50,15 @@ class App extends Component {
     return {
       leftCol: clarifaiFace.left_col * width,
       topRow: clarifaiFace.top_row * height,
-      rightCol: width - (clarifaiFace.right_col * width),
-      bottomRow: height - (clarifaiFace.bottom_row * height)
-    }
+      rightCol: width - clarifaiFace.right_col * width,
+      bottomRow: height - clarifaiFace.bottom_row * height
+    };
   };
 
-  displayFaceBox = (calculatedBox) => {
+  displayFaceBox = calculatedBox => {
     console.log(calculatedBox);
-    this.setState({box: calculatedBox})
-  }
+    this.setState({ box: calculatedBox });
+  };
 
   onInputChange = event => {
     console.log(event.target.value);
@@ -72,20 +77,45 @@ class App extends Component {
       .catch(err => console.log(err));
   };
 
+  onRouteChange = location => {
+    if (location === "signIn") {
+      this.setState({ isSignedIn: true });
+    } else if (location === "signOut") {
+      this.setState({isSignedIn: false})
+    }
+    this.setState({ route: location });
+  };
 
   render() {
+    const { isSignedIn, imageURL, route, box } = this.state
     return (
       <div className="App">
         <Particles params={{ particlesOptions }} className="particles" />
-        <Navigation />
-        <Logo />
-        {/* onimput change is passed as a prop */}
-        <ImageLink
-          onInputChange={this.onInputChange}
-          onBtnSubmit={this.onSubmit}
+        <Navigation
+          onRouteChange={this.onRouteChange}
+          isSignedIn={isSignedIn}
         />
-        <Rank />
-        <FaceRecognitionComp box={this.state.box} imageURL={this.state.imageURL} />
+        {route === "home" ? (
+          <div>
+            <Logo />
+            <ImageLink
+              onInputChange={this.onInputChange}
+              onBtnSubmit={this.onSubmit}
+            />
+            <Rank />
+            <FaceRecognitionComp
+              box={box}
+              imageURL={imageURL}
+            />
+          </div>
+        ) : route === "signIn" ? (
+          <SignIn
+            onRouteChange={this.onRouteChange}
+            isSignedIn={isSignedIn}
+          />
+        ) : (
+          <Register onRouteChange={this.onRouteChange} />
+        )}
       </div>
     );
   }
